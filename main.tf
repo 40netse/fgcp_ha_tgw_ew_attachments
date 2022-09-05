@@ -288,6 +288,7 @@ module "allow_public_subnets" {
 #
 module "base-vpc" {
   source                          = "git::https://github.com/40netse/base_vpc_dual_az.git"
+  aws_region                      = var.aws_region
   customer_prefix                 = var.cp
   environment                     = var.env
   availability_zone1              = var.availability_zone1
@@ -311,7 +312,6 @@ module "vpc-transit-gateway" {
   tgw_name                        = "${var.cp}-${var.env}-tgw"
   default_route_table_association = "disable"
   default_route_table_propagation = "disable"
-  description                     = "tgw for east-west inspection"
   dns_support                     = "disable"
   default_route_attachment_id     = module.vpc-transit-gateway-attachment-security[0].tgw_attachment_id
 }
@@ -848,7 +848,7 @@ module "west_instance" {
 module "fortimanager" {
   source                      = "git::https://github.com/40netse/fortimanager_existing_vpc.git"
   count                       = var.enable_fortimanager ? 1 : 0
-  aws_ec2_instance_name = "${var.cp}-${var.env}-${var.vpc_name_security}-${var.fortimanager_instance_name}"
+  aws_ec2_instance_name       = "${var.cp}-${var.env}-${var.vpc_name_security}-${var.fortimanager_instance_name}"
 
   aws_region                  = var.aws_region
   customer_prefix             = var.cp
