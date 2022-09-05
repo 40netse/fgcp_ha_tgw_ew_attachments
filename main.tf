@@ -81,7 +81,7 @@ locals {
   linux_east_ip_address = cidrhost(var.vpc_cidr_east, var.linux_host_ip)
 }
 locals {
-  linux_west_ip_address = cidrhost(var.vpc_cidr_east, var.linux_host_ip)
+  linux_west_ip_address = cidrhost(var.vpc_cidr_west, var.linux_host_ip)
 }
 locals {
   fortimanager_ip_address = cidrhost(local.tgw_subnet_cidr_az1, var.fortimanager_host_ip)
@@ -530,6 +530,20 @@ module "sync-subnet-1" {
   subnet_cidr                = local.sync_subnet_cidr_az1
 }
 
+module "sync1_route_table" {
+  source                     = "git::https://github.com/40netse/terraform-modules.git//aws_route_table"
+  rt_name                    = "${var.cp}-${var.env}-sync1-route_table"
+
+  vpc_id                     = module.base-vpc.vpc_id
+}
+
+module "sync1_route_table_association" {
+  source                     = "git::https://github.com/40netse/terraform-modules.git//aws_route_table_association"
+
+  subnet_ids                 = module.sync-subnet-1.id
+  route_table_id             = module.sync1_route_table.id
+}
+
 module "sync-subnet-2" {
   source      = "git::https://github.com/40netse/terraform-modules.git//aws_subnet"
   subnet_name = "${var.cp}-${var.env}-sync2-subnet"
@@ -537,6 +551,20 @@ module "sync-subnet-2" {
   vpc_id                     = module.base-vpc.vpc_id
   availability_zone          = local.availability_zone_2
   subnet_cidr                = local.sync_subnet_cidr_az2
+}
+
+module "sync2_route_table" {
+  source                     = "git::https://github.com/40netse/terraform-modules.git//aws_route_table"
+  rt_name                    = "${var.cp}-${var.env}-sync2-route_table"
+
+  vpc_id                     = module.base-vpc.vpc_id
+}
+
+module "sync2_route_table_association" {
+  source                     = "git::https://github.com/40netse/terraform-modules.git//aws_route_table_association"
+
+  subnet_ids                 = module.sync-subnet-2.id
+  route_table_id             = module.sync2_route_table.id
 }
 
 module "ha-subnet-1" {
