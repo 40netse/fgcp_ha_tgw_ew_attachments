@@ -609,7 +609,7 @@ resource "aws_default_route_table" "route_east" {
 }
 
 module "rta-east" {
-  source = "git::https://github.com/40netse/terraform-modules.git//aws_route_table_asssociation"
+  source = "git::https://github.com/40netse/terraform-modules.git//aws_route_table_association"
   count                      = var.create_transit_gateway ? 1 : 0
   subnet_ids                 = module.subnet-east[0].id
   route_table_id             = module.vpc-east[0].vpc_main_route_table_id
@@ -652,7 +652,7 @@ resource "aws_default_route_table" "route_west" {
 }
 
 module "rta-west" {
-  source = "git::https://github.com/40netse/terraform-modules.git//aws_route_table_asssociation"
+  source = "git::https://github.com/40netse/terraform-modules.git//aws_route_table_association"
   count                      = var.create_transit_gateway ? 1 : 0
   subnet_ids                 = module.subnet-west[0].id
   route_table_id             = module.vpc-west[0].vpc_main_route_table_id
