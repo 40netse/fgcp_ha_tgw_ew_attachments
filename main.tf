@@ -691,7 +691,6 @@ module "fortigate_1" {
   aws_ami                     = var.use_fortigate_byol ? data.aws_ami.fortigate_byol.id : data.aws_ami.fortigate_paygo.id
   keypair                     = var.keypair
   instance_type               = var.fortigate_instance_type
-  instance_name               = var.fortigate_instance_name_1
   security_group_private_id   = module.allow_private_subnets.id
   security_group_public_id    = module.allow_public_subnets.id
   acl                         = var.acl
@@ -720,7 +719,6 @@ module "fortigate_2" {
   aws_ami                     = var.use_fortigate_byol ? data.aws_ami.fortigate_byol.id : data.aws_ami.fortigate_paygo.id
   keypair                     = var.keypair
   instance_type               = var.fortigate_instance_type
-  instance_name               = var.fortigate_instance_name_2
   security_group_private_id   = module.allow_private_subnets.id
   security_group_public_id    = module.allow_public_subnets.id
   acl                         = var.acl
@@ -849,7 +847,6 @@ module "west_instance" {
 module "fortimanager" {
   source                      = "git::https://github.com/40netse/fortimanager_existing_vpc.git"
   count                       = var.enable_fortimanager ? 1 : 0
-  aws_ec2_instance_name       = "${var.cp}-${var.env}-${var.vpc_name_security}-${var.fortimanager_instance_name}"
 
   aws_region                  = var.aws_region
   customer_prefix             = var.cp
