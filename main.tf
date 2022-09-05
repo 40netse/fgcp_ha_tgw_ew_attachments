@@ -251,6 +251,7 @@ data "aws_ami" "fortigate_paygo" {
 module "allow_private_subnets" {
   source = "git::https://github.com/40netse/terraform-modules.git//aws_security_group"
   sg_name= "${var.cp}-${var.env}-${random_string.random.result}-${var.fgt_sg_name} Allow Private Subnets"
+
   vpc_id                  = module.base-vpc.vpc_id
   ingress_to_port         = 0
   ingress_from_port       = 0
@@ -268,6 +269,7 @@ module "allow_private_subnets" {
 module "allow_public_subnets" {
   source = "git::https://github.com/40netse/terraform-modules.git//aws_security_group"
   sg_name= "${var.cp}-${var.env}-${random_string.random.result}-${var.fgt_sg_name} Allow Public Subnets"
+
   vpc_id                  = module.base-vpc.vpc_id
   ingress_to_port         = 0
   ingress_from_port       = 0
@@ -392,7 +394,7 @@ module "vpc-transit-gateway-attachment-east" {
 
 resource "aws_ec2_transit_gateway_route_table" "east" {
   count                          = var.create_transit_gateway ? 1 : 0
-  transit_gateway_id = module.vpc-transit-gateway[0].tgw_id
+  transit_gateway_id             = module.vpc-transit-gateway[0].tgw_id
     tags = {
       Name = "${var.cp}-${var.env}-East VPC TGW Route Table"
   }
@@ -431,7 +433,7 @@ module "vpc-transit-gateway-attachment-west" {
 
 resource "aws_ec2_transit_gateway_route_table" "west" {
   count                          = var.create_transit_gateway ? 1 : 0
-  transit_gateway_id = module.vpc-transit-gateway[0].tgw_id
+  transit_gateway_id             = module.vpc-transit-gateway[0].tgw_id
   tags = {
     Name = "${var.cp}-${var.env}-West VPC TGW Route Table"
   }
@@ -460,7 +462,7 @@ resource "aws_ec2_transit_gateway_route" "tgw_route_west_default" {
 
 resource "aws_default_route_table" "route_security" {
   count                          = var.create_transit_gateway ? 1 : 0
-  default_route_table_id = module.base-vpc.vpc_main_route_table_id
+  default_route_table_id         = module.base-vpc.vpc_main_route_table_id
   tags = {
     Name = "default table for security vpc (unused)"
   }
@@ -495,7 +497,7 @@ module "private1_tgw_route_table_association" {
 }
 
 module "private2-subnet-tgw" {
-  source = "git::https://github.com/40netse/terraform-modules.git//aws_subnet"
+  source      = "git::https://github.com/40netse/terraform-modules.git//aws_subnet"
   subnet_name = "${var.cp}-${var.env}-tgw2-subnet"
 
   vpc_id                     = module.base-vpc.vpc_id
@@ -520,7 +522,7 @@ module "private2_tgw_route_table_association" {
 }
 
 module "sync-subnet-1" {
-  source = "git::https://github.com/40netse/terraform-modules.git//aws_subnet"
+  source      = "git::https://github.com/40netse/terraform-modules.git//aws_subnet"
   subnet_name = "${var.cp}-${var.env}-sync1-subnet"
 
   vpc_id                     = module.base-vpc.vpc_id
@@ -529,7 +531,7 @@ module "sync-subnet-1" {
 }
 
 module "sync-subnet-2" {
-  source = "git::https://github.com/40netse/terraform-modules.git//aws_subnet"
+  source      = "git::https://github.com/40netse/terraform-modules.git//aws_subnet"
   subnet_name = "${var.cp}-${var.env}-sync2-subnet"
 
   vpc_id                     = module.base-vpc.vpc_id
@@ -640,7 +642,7 @@ module "subnet-west" {
 # that points to the TGW Attachment
 #
 resource "aws_default_route_table" "route_west" {
-  default_route_table_id = module.vpc-west[0].vpc_main_route_table_id
+  default_route_table_id     = module.vpc-west[0].vpc_main_route_table_id
   count                      = var.create_transit_gateway ? 1 : 0
   route {
     cidr_block = "0.0.0.0/0"
@@ -653,6 +655,7 @@ resource "aws_default_route_table" "route_west" {
 
 module "rta-west" {
   source = "git::https://github.com/40netse/terraform-modules.git//aws_route_table_association"
+
   count                      = var.create_transit_gateway ? 1 : 0
   subnet_ids                 = module.subnet-west[0].id
   route_table_id             = module.vpc-west[0].vpc_main_route_table_id
@@ -761,9 +764,9 @@ data "aws_ami" "ubuntu" {
 # Security Groups are VPC specific, so an "ALLOW ALL" for each VPC
 #
 module "ec2-east-sg" {
-  source = "git::https://github.com/40netse/terraform-modules.git//aws_security_group"
+  source                  = "git::https://github.com/40netse/terraform-modules.git//aws_security_group"
   count                   = var.create_transit_gateway ? 1 : 0
-  sg_name= "${var.cp}-${var.env}-${random_string.random.result}-${var.ec2_sg_name} Allow East Subnets"
+  sg_name                 = "${var.cp}-${var.env}-${random_string.random.result}-${var.ec2_sg_name} Allow East Subnets"
   vpc_id                  = module.vpc-east[0].vpc_id
   ingress_to_port         = 0
   ingress_from_port       = 0
@@ -772,14 +775,14 @@ module "ec2-east-sg" {
   egress_to_port          = 0
   egress_from_port        = 0
   egress_protocol         = "-1"
-  egress_cidr_for_access = "0.0.0.0/0"
+  egress_cidr_for_access  = "0.0.0.0/0"
 }
 
 
 module "ec2-west-sg" {
-  source = "git::https://github.com/40netse/terraform-modules.git//aws_security_group"
-  count                 = var.create_transit_gateway ? 1 : 0
-  sg_name= "${var.cp}-${var.env}-${random_string.random.result}-${var.ec2_sg_name} Allow West Subnets"
+  source                  = "git::https://github.com/40netse/terraform-modules.git//aws_security_group"
+  count                   = var.create_transit_gateway ? 1 : 0
+  sg_name                 = "${var.cp}-${var.env}-${random_string.random.result}-${var.ec2_sg_name} Allow West Subnets"
   vpc_id                  = module.vpc-west[0].vpc_id
   ingress_to_port         = 0
   ingress_from_port       = 0
@@ -788,7 +791,7 @@ module "ec2-west-sg" {
   egress_to_port          = 0
   egress_from_port        = 0
   egress_protocol         = "-1"
-  egress_cidr_for_access = "0.0.0.0/0"
+  egress_cidr_for_access  = "0.0.0.0/0"
 }
 
 #
@@ -804,9 +807,9 @@ module "linux_iam_profile" {
 # East Linux Instance for Generating East->West Traffic
 #
 module "east_instance" {
-  source                = "git::https://github.com/40netse/terraform-modules.git//aws_ec2_instance"
-  count                 = var.create_transit_gateway && var.enable_linux_instances ? 1 : 0
-  aws_ec2_instance_name = "${var.cp}-${var.env}-${var.vpc_name_east}-${var.linux_instance_name_east}"
+  source                      = "git::https://github.com/40netse/terraform-modules.git//aws_ec2_instance"
+  count                       = var.create_transit_gateway && var.enable_linux_instances ? 1 : 0
+  aws_ec2_instance_name       = "${var.cp}-${var.env}-${var.vpc_name_east}-${var.linux_instance_name_east}"
   enable_public_ips           = false
   availability_zone           = local.availability_zone_1
   public_subnet_id            = module.subnet-east[0].id
@@ -814,7 +817,6 @@ module "east_instance" {
   aws_ami                     = data.aws_ami.ubuntu.id
   keypair                     = var.keypair
   instance_type               = var.linux_instance_type
-  instance_name               = var.linux_instance_name_east
   security_group_public_id    = module.ec2-east-sg[0].id
   acl                         = var.acl
   iam_instance_profile_id     = module.iam_profile.id
@@ -825,9 +827,9 @@ module "east_instance" {
 # West Linux Instance for Generating West->East Traffic
 #
 module "west_instance" {
-  source                = "git::https://github.com/40netse/terraform-modules.git//aws_ec2_instance"
-  count                 = var.create_transit_gateway && var.enable_linux_instances ? 1 : 0
-  aws_ec2_instance_name = "${var.cp}-${var.env}-${var.vpc_name_west}-${var.linux_instance_name_west}"
+  source                      = "git::https://github.com/40netse/terraform-modules.git//aws_ec2_instance"
+  count                       = var.create_transit_gateway && var.enable_linux_instances ? 1 : 0
+  aws_ec2_instance_name       = "${var.cp}-${var.env}-${var.vpc_name_west}-${var.linux_instance_name_west}"
   enable_public_ips           = false
   availability_zone           = local.availability_zone_2
   public_subnet_id            = module.subnet-west[0].id
@@ -835,7 +837,6 @@ module "west_instance" {
   aws_ami                     = data.aws_ami.ubuntu.id
   keypair                     = var.keypair
   instance_type               = var.linux_instance_type
-  instance_name               = var.linux_instance_name_west
   security_group_public_id    = module.ec2-west-sg[0].id
   acl                         = var.acl
   iam_instance_profile_id     = module.iam_profile.id
