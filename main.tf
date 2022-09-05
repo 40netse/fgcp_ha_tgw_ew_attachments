@@ -633,7 +633,7 @@ module "subnet-west" {
   count                      = var.create_transit_gateway ? 1 : 0
   subnet_name                = "${var.cp}-${var.env}-${var.vpc_name_west}-subnet"
 
-  vpc_id                     = module.vpc-east[0].vpc_id
+  vpc_id                     = module.vpc-west[0].vpc_id
   availability_zone          = local.availability_zone_2
   subnet_cidr                = var.vpc_cidr_west
 }
@@ -702,7 +702,7 @@ module "fortigate_2" {
   source                      = "git::https://github.com/40netse/terraform-modules.git//aws_ec2_instance"
 
   aws_ec2_instance_name       = "${var.cp}-${var.env}-${var.vpc_name_security}-${var.fortigate_instance_name_2}"
-  availability_zone           = local.availability_zone_1
+  availability_zone           = local.availability_zone_2
   enable_private_interface    = true
   enable_sync_interface       = true
   enable_hamgmt_interface     = true
