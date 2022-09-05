@@ -850,6 +850,9 @@ module "fortimanager" {
   count                       = var.enable_fortimanager ? 1 : 0
   aws_ec2_instance_name = "${var.cp}-${var.env}-${var.vpc_name_security}-${var.fortimanager_instance_name}"
 
+  aws_region                  = var.aws_region
+  customer_prefix             = var.cp
+  environment                 = var.env
   availability_zone           = local.availability_zone_1
   vpc_id                      = module.base-vpc.vpc_id
   subnet_id                   = module.private1-subnet-tgw.id
