@@ -129,6 +129,15 @@ variable "private1_description" {
 }
 variable "tgw1_description" {
     description = "Description TGW 1 TO Subnet TAG"
+    default = ""
+}
+variable "sync1_description" {
+    description = "Description Sync 1 TO Subnet TAG"
+    default = ""
+}
+variable "mgmt1_description" {
+    description = "Description Mgmt 1 TO Subnet TAG"
+    default = ""
 }
 variable "public2_description" {
     description = "Description Public 2 Subnet TAG"
@@ -138,6 +147,15 @@ variable "private2_description" {
 }
 variable "tgw2_description" {
     description = "Description TGW 2 TO Subnet TAG"
+    default = ""
+}
+variable "sync2_description" {
+    description = "Description Sync 2 TO Subnet TAG"
+    default = ""
+}
+variable "mgmt2_description" {
+    description = "Description Mgmt 2 TO Subnet TAG"
+    default = ""
 }
 variable "vpc_tag_key" {
     description = "Random Tag Key to place on VPC for data ID"

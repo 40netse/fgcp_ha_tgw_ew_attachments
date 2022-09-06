@@ -295,15 +295,24 @@ module "base-vpc" {
   environment                     = var.env
   availability_zone1              = var.availability_zone1
   availability_zone2              = var.availability_zone2
+  create_tgw_connect_subnets      = var.create_transit_gateway ? true : false
+  create_ha_subnets               = true
   vpc_name_security               = var.vpc_name_security
   vpc_cidr_security               = var.vpc_cidr_security
   subnet_bits                     = var.subnet_bits
   public_subnet_index             = var.public_subnet_index
   private_subnet_index            = var.private_subnet_index
+  tgw_subnet_index                = var.tgw_subnet_index
   public1_description             = var.public1_description
   private1_description            = var.private1_description
+  tgw1_description                = var.tgw1_description
+  sync1_description               = var.sync1_description
+  mgmt1_description               = var.mgmt1_description
   public2_description             = var.public2_description
   private2_description            = var.private2_description
+  sync2_description               = var.sync2_description
+  mgmt2_description               = var.mgmt2_description
+  tgw2_description                = var.tgw2_description
   vpc_tag_key                     = var.vpc_tag_key
   vpc_tag_value                   = var.vpc_tag_value
 }
@@ -345,7 +354,8 @@ module "vpc-transit-gateway-attachment-security" {
   tgw_attachment_name            = "${var.cp}-${var.env}-${var.vpc_name_security}-tgw-attachment"
 
   transit_gateway_id                              = module.vpc-transit-gateway[0].tgw_id
-  subnet_ids                                      = [ module.private1-subnet-tgw.id, module.private2-subnet-tgw.id ]
+  subnet_ids                                      = [ element(module.base-vpc.tgw1_subnet_id, 0),
+                                                      element(module.base-vpc.tgw2_subnet_id,0) ]
   transit_gateway_default_route_table_propogation = "false"
   vpc_id                                          = module.base-vpc.vpc_id
 }
@@ -472,121 +482,15 @@ resource "aws_default_route_table" "route_security" {
 # Private 1 and 2 subnets that are connected to the TGW
 # These route tables point to the ENI of the ACTIVE Fortigate
 #
-module "private1-subnet-tgw" {
-  source      = "git::https://github.com/40netse/terraform-modules.git//aws_subnet"
-  subnet_name = "${var.cp}-${var.env}-tgw1-subnet"
-
-  vpc_id                     = module.base-vpc.vpc_id
-  availability_zone          = local.availability_zone_1
-  subnet_cidr                = local.tgw_subnet_cidr_az1
+resource "aws_route" "tgw1_default_route" {
+  route_table_id         = element(module.base-vpc.tgw1_route_table_id, 0)
+  destination_cidr_block = "0.0.0.0/0"
+  network_interface_id   = element(module.fortigate_1.network_private_interface_id, 0)
 }
-
-module "private1_tgw_route_table" {
-  source                     = "git::https://github.com/40netse/terraform-modules.git//aws_route_table"
-  rt_name                    = "${var.cp}-${var.env}-tgw1-route_table"
-  vpc_id                     = module.base-vpc.vpc_id
-  eni_route                  = 1
-  eni_id                     = element(module.fortigate_1.network_private_interface_id, 0)
-}
-
-module "private1_tgw_route_table_association" {
-  source                     = "git::https://github.com/40netse/terraform-modules.git//aws_route_table_association"
-
-  subnet_ids                 = module.private1-subnet-tgw.id
-  route_table_id             = module.private1_tgw_route_table.id
-}
-
-module "private2-subnet-tgw" {
-  source      = "git::https://github.com/40netse/terraform-modules.git//aws_subnet"
-  subnet_name = "${var.cp}-${var.env}-tgw2-subnet"
-
-  vpc_id                     = module.base-vpc.vpc_id
-  availability_zone          = local.availability_zone_2
-  subnet_cidr                = local.tgw_subnet_cidr_az2
-}
-
-module "private2_tgw_route_table" {
-  source                     = "git::https://github.com/40netse/terraform-modules.git//aws_route_table"
-  rt_name                    = "${var.cp}-${var.env}-tgw2-route_table"
-
-  vpc_id                     = module.base-vpc.vpc_id
-  eni_route                  = 1
-  eni_id                     = element(module.fortigate_1.network_private_interface_id, 0)
-}
-
-module "private2_tgw_route_table_association" {
-  source                     = "git::https://github.com/40netse/terraform-modules.git//aws_route_table_association"
-
-  subnet_ids                 = module.private2-subnet-tgw.id
-  route_table_id             = module.private2_tgw_route_table.id
-}
-
-module "sync-subnet-1" {
-  source      = "git::https://github.com/40netse/terraform-modules.git//aws_subnet"
-  subnet_name = "${var.cp}-${var.env}-sync1-subnet"
-
-  vpc_id                     = module.base-vpc.vpc_id
-  availability_zone          = local.availability_zone_1
-  subnet_cidr                = local.sync_subnet_cidr_az1
-}
-
-module "sync1_route_table" {
-  source                     = "git::https://github.com/40netse/terraform-modules.git//aws_route_table"
-  rt_name                    = "${var.cp}-${var.env}-sync1-route_table"
-
-  vpc_id                     = module.base-vpc.vpc_id
-}
-
-module "sync1_route_table_association" {
-  source                     = "git::https://github.com/40netse/terraform-modules.git//aws_route_table_association"
-
-  subnet_ids                 = module.sync-subnet-1.id
-  route_table_id             = module.sync1_route_table.id
-}
-
-module "sync-subnet-2" {
-  source      = "git::https://github.com/40netse/terraform-modules.git//aws_subnet"
-  subnet_name = "${var.cp}-${var.env}-sync2-subnet"
-
-  vpc_id                     = module.base-vpc.vpc_id
-  availability_zone          = local.availability_zone_2
-  subnet_cidr                = local.sync_subnet_cidr_az2
-}
-
-module "sync2_route_table" {
-  source                     = "git::https://github.com/40netse/terraform-modules.git//aws_route_table"
-  rt_name                    = "${var.cp}-${var.env}-sync2-route_table"
-
-  vpc_id                     = module.base-vpc.vpc_id
-}
-
-module "sync2_route_table_association" {
-  source                     = "git::https://github.com/40netse/terraform-modules.git//aws_route_table_association"
-
-  subnet_ids                 = module.sync-subnet-2.id
-  route_table_id             = module.sync2_route_table.id
-}
-
-module "ha-subnet-1" {
-  source = "git::https://github.com/40netse/terraform-modules.git//aws_subnet"
-  subnet_name = "${var.cp}-${var.env}-mgmt1-subnet"
-
-  vpc_id                     = module.base-vpc.vpc_id
-  availability_zone          = local.availability_zone_1
-  subnet_cidr                = local.mgmt_subnet_cidr_az1
-  public_route               = 1
-  public_route_table_id      = module.base-vpc.public_route_table_id
-}
-
-module "ha-subnet-2" {
-  source = "git::https://github.com/40netse/terraform-modules.git//aws_subnet"
-  subnet_name = "${var.cp}-${var.env}-mgmt2-subnet"
-
-  vpc_id                     = module.base-vpc.vpc_id
-  availability_zone          = local.availability_zone_2
-  subnet_cidr                = local.mgmt_subnet_cidr_az2
-  public_route               = 1
-  public_route_table_id      = module.base-vpc.public_route_table_id
+resource "aws_route" "tgw2_default_route" {
+  route_table_id         = element(module.base-vpc.tgw2_route_table_id, 0)
+  destination_cidr_block = "0.0.0.0/0"
+  network_interface_id   = element(module.fortigate_1.network_private_interface_id, 0)
 }
 
 #
@@ -712,9 +616,9 @@ module "fortigate_1" {
   public_ip_address           = local.fgt_public1_ip_address
   private_subnet_id           = module.base-vpc.private1_subnet_id
   private_ip_address          = local.fgt_private1_ip_address
-  sync_subnet_id              = module.sync-subnet-1.id
+  sync_subnet_id              = element(module.base-vpc.sync1_route_table_id, 0)
   sync_ip_address             = local.fgt_sync1_ip_address
-  ha_subnet_id                = module.ha-subnet-1.id
+  ha_subnet_id                = element(module.base-vpc.mgmt1_route_table_id, 0)
   ha_ip_address               = local.fgt_mgmt1_ip_address
   aws_ami                     = var.use_fortigate_byol ? data.aws_ami.fortigate_byol.id : data.aws_ami.fortigate_paygo.id
   keypair                     = var.keypair
@@ -740,9 +644,9 @@ module "fortigate_2" {
   public_ip_address           = local.fgt_public2_ip_address
   private_subnet_id           = module.base-vpc.private2_subnet_id
   private_ip_address          = local.fgt_private2_ip_address
-  sync_subnet_id              = module.sync-subnet-2.id
+  sync_subnet_id              = element(module.base-vpc.sync2_route_table_id, 0)
   sync_ip_address             = local.fgt_sync2_ip_address
-  ha_subnet_id                = module.ha-subnet-2.id
+  ha_subnet_id                = element(module.base-vpc.mgmt1_route_table_id, 0)
   ha_ip_address               = local.fgt_mgmt2_ip_address
   aws_ami                     = var.use_fortigate_byol ? data.aws_ami.fortigate_byol.id : data.aws_ami.fortigate_paygo.id
   keypair                     = var.keypair
@@ -881,7 +785,7 @@ module "fortimanager" {
   environment                 = var.env
   availability_zone           = local.availability_zone_1
   vpc_id                      = module.base-vpc.vpc_id
-  subnet_id                   = module.private1-subnet-tgw.id
+  subnet_id                   = module.base-vpc.tgw1_subnet_id
   ip_address                  = local.fortimanager_ip_address
   keypair                     = var.keypair
   fortimanager_instance_type  = var.fortimanager_instance_type

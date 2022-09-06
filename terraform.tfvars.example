@@ -103,10 +103,14 @@ use_fortigate_byol                    = true
 public1_description         = "public-1"
 private1_description        = "private-1"
 tgw1_description            = "tgw-1"
+sync1_description           = "sync-1"
+mgmt1_description           = "mgmt-1"
 
 public2_description         = "public-2"
 private2_description        = "private-2"
 tgw2_description            = "tgw-2"
+sync2_description           = "sync-2"
+mgmt2_description           = "mgmt-2"
 
 vpc_tag_key                 = "id-tag-key"
 vpc_tag_value               = "id-tag-value"
