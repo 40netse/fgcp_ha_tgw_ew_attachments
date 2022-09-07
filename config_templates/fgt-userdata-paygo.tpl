@@ -13,6 +13,9 @@ end
 config system admin
 edit "admin"
 set password ${fgt_admin_password}
+set force-password-change disable
+set gui-default-dashboard-template "minimal"
+set gui-ignore-release-overview-version "7.0.0"
 next
 end
 config system interface
