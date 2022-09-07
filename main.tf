@@ -437,7 +437,7 @@ resource "aws_ec2_transit_gateway_route" "tgw_route_east_cidr" {
 module "vpc-transit-gateway-attachment-west" {
   count                          = var.create_transit_gateway ? 1 : 0
   source                         = "git::https://github.com/40netse/terraform-modules.git//aws_tgw_attachment"
-  tgw_attachment_name            = "${var.cp}-${var.env}-${var.vpc_name_east}-tgw-attachment"
+  tgw_attachment_name            = "${var.cp}-${var.env}-${var.vpc_name_west}-tgw-attachment"
 
   transit_gateway_id                              = module.vpc-transit-gateway[0].tgw_id
   subnet_ids                                      = [ module.subnet-west[0].id ]
