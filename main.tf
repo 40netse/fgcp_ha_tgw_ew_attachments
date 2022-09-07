@@ -302,6 +302,8 @@ module "base-vpc" {
   subnet_bits                     = var.subnet_bits
   public_subnet_index             = var.public_subnet_index
   private_subnet_index            = var.private_subnet_index
+  sync_subnet_index               = var.sync_subnet_index
+  mgmt_subnet_index               = var.mgmt_subnet_index
   tgw_subnet_index                = var.tgw_subnet_index
   public1_description             = var.public1_description
   private1_description            = var.private1_description
@@ -331,6 +333,7 @@ module "vpc-transit-gateway" {
 # Point the private route table default route to the TGW
 #
 resource "aws_route" "tgw1" {
+  depends_on             = [module.vpc-transit-gateway]
   count                  = var.create_transit_gateway ? 1 : 0
   route_table_id         = module.base-vpc.private1_route_table_id
   destination_cidr_block = "0.0.0.0/0"
@@ -339,6 +342,7 @@ resource "aws_route" "tgw1" {
 
 
 resource "aws_route" "tgw2" {
+  depends_on             = [module.vpc-transit-gateway]
   count                  = var.create_transit_gateway ? 1 : 0
   route_table_id         = module.base-vpc.private2_route_table_id
   destination_cidr_block = "0.0.0.0/0"
