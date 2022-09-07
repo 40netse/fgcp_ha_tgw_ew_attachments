@@ -620,9 +620,9 @@ module "fortigate_1" {
   public_ip_address           = local.fgt_public1_ip_address
   private_subnet_id           = module.base-vpc.private1_subnet_id
   private_ip_address          = local.fgt_private1_ip_address
-  sync_subnet_id              = element(module.base-vpc.sync1_route_table_id, 0)
+  sync_subnet_id              = element(module.base-vpc.sync1_subnet_id, 0)
   sync_ip_address             = local.fgt_sync1_ip_address
-  ha_subnet_id                = element(module.base-vpc.mgmt1_route_table_id, 0)
+  ha_subnet_id                = element(module.base-vpc.mgmt1_subnet_id, 0)
   ha_ip_address               = local.fgt_mgmt1_ip_address
   aws_ami                     = var.use_fortigate_byol ? data.aws_ami.fortigate_byol.id : data.aws_ami.fortigate_paygo.id
   keypair                     = var.keypair
@@ -648,9 +648,9 @@ module "fortigate_2" {
   public_ip_address           = local.fgt_public2_ip_address
   private_subnet_id           = module.base-vpc.private2_subnet_id
   private_ip_address          = local.fgt_private2_ip_address
-  sync_subnet_id              = element(module.base-vpc.sync2_route_table_id, 0)
+  sync_subnet_id              = element(module.base-vpc.sync2_subnet_id, 0)
   sync_ip_address             = local.fgt_sync2_ip_address
-  ha_subnet_id                = element(module.base-vpc.mgmt1_route_table_id, 0)
+  ha_subnet_id                = element(module.base-vpc.mgmt2_subnet_id, 0)
   ha_ip_address               = local.fgt_mgmt2_ip_address
   aws_ami                     = var.use_fortigate_byol ? data.aws_ami.fortigate_byol.id : data.aws_ami.fortigate_paygo.id
   keypair                     = var.keypair
