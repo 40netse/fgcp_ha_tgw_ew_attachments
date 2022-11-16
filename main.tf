@@ -4,15 +4,10 @@ locals {
     Environment = var.env
   }
 }
-
-locals {
-    id_tag = var.vpc_tag_key != "" ? tomap({(var.vpc_tag_key) = (var.vpc_tag_value)}) : {}
-}
-
 provider "aws" {
   region     = var.aws_region
   default_tags {
-    tags = merge(local.common_tags, local.id_tag)
+    tags = local.common_tags
   }
 }
 
@@ -30,37 +25,32 @@ locals {
   private_subnet_cidr_az1 = cidrsubnet(var.vpc_cidr_security, var.subnet_bits, var.private_subnet_index)
 }
 locals {
-  sync_subnet_cidr_az1 = cidrsubnet(var.vpc_cidr_security, var.subnet_bits, var.sync_subnet_index)
-}
-locals {
   mgmt_subnet_cidr_az1 = cidrsubnet(var.vpc_cidr_security, var.subnet_bits, var.mgmt_subnet_index)
 }
 locals {
   tgw_subnet_cidr_az1 = cidrsubnet(var.vpc_cidr_security, var.subnet_bits, var.tgw_subnet_index)
 }
 locals {
-  public_subnet_cidr_az2 = cidrsubnet(var.vpc_cidr_security, var.subnet_bits, (var.public_subnet_index * 10))
+  public_subnet_cidr_az2 = cidrsubnet(var.vpc_cidr_security, var.subnet_bits,
+  (var.public_subnet_index + (var.create_transit_gateway ? 4 : 3)))
 }
 locals {
-  private_subnet_cidr_az2 = cidrsubnet(var.vpc_cidr_security, var.subnet_bits, (var.private_subnet_index * 10))
+  private_subnet_cidr_az2 = cidrsubnet(var.vpc_cidr_security, var.subnet_bits,
+  (var.private_subnet_index + (var.create_transit_gateway ? 4 : 3)))
 }
 locals {
-  sync_subnet_cidr_az2 = cidrsubnet(var.vpc_cidr_security, var.subnet_bits, (var.sync_subnet_index * 10))
+  mgmt_subnet_cidr_az2= cidrsubnet(var.vpc_cidr_security, var.subnet_bits,
+  (var.mgmt_subnet_index + (var.create_transit_gateway ? 4 : 3)))
 }
 locals {
-  mgmt_subnet_cidr_az2 = cidrsubnet(var.vpc_cidr_security, var.subnet_bits, (var.mgmt_subnet_index * 10))
-}
-locals {
-  tgw_subnet_cidr_az2 = cidrsubnet(var.vpc_cidr_security, var.subnet_bits, (var.tgw_subnet_index * 10))
+  tgw_subnet_cidr_az2 = cidrsubnet(var.vpc_cidr_security, var.subnet_bits,
+  (var.tgw_subnet_index + (var.create_transit_gateway ? 4 : 3)))
 }
 locals {
   fgt_public1_ip_address = cidrhost(local.public_subnet_cidr_az1, var.fgt_host_ip)
 }
 locals {
   fgt_private1_ip_address = cidrhost(local.private_subnet_cidr_az1, var.fgt_host_ip)
-}
-locals {
-  fgt_sync1_ip_address = cidrhost(local.sync_subnet_cidr_az1, var.fgt_host_ip)
 }
 locals {
   fgt_mgmt1_ip_address = cidrhost(local.mgmt_subnet_cidr_az1, var.fgt_host_ip)
@@ -70,9 +60,6 @@ locals {
 }
 locals {
   fgt_private2_ip_address = cidrhost(local.private_subnet_cidr_az2, var.fgt_host_ip)
-}
-locals {
-  fgt_sync2_ip_address = cidrhost(local.sync_subnet_cidr_az2, var.fgt_host_ip)
 }
 locals {
   fgt_mgmt2_ip_address = cidrhost(local.mgmt_subnet_cidr_az2, var.fgt_host_ip)
@@ -99,8 +86,7 @@ data "template_file" "fgt_userdata_byol1" {
     fgt_id                = var.fortigate_hostname_1
     Port1IP               = local.fgt_public1_ip_address
     Port2IP               = local.fgt_private1_ip_address
-    Port3IP               = local.fgt_sync1_ip_address
-    Port4IP               = local.fgt_mgmt1_ip_address
+    Port3IP               = local.fgt_mgmt1_ip_address
     security_cidr         = var.vpc_cidr_security
     spoke1_cidr           = var.vpc_cidr_east
     spoke2_cidr           = var.vpc_cidr_west
@@ -113,8 +99,7 @@ data "template_file" "fgt_userdata_byol1" {
     PublicSubnetRouterIP  = cidrhost(local.public_subnet_cidr_az1, 1)
     public_subnet_mask    = cidrnetmask(local.public_subnet_cidr_az1)
     private_subnet_mask   = cidrnetmask(local.private_subnet_cidr_az1)
-    sync_subnet_mask      = cidrnetmask(local.sync_subnet_cidr_az1)
-    hamgmt_subnet_mask    = cidrnetmask(local.mgmt_subnet_cidr_az1)
+    mgmt_subnet_mask      = cidrnetmask(local.mgmt_subnet_cidr_az1)
     PrivateSubnetRouterIP = cidrhost(local.private_subnet_cidr_az1, 1)
     fgt_admin_password    = var.fgt_admin_password
   }
@@ -127,8 +112,7 @@ data "template_file" "fgt_userdata_byol2" {
     fgt_id                = var.fortigate_hostname_2
     Port1IP               = local.fgt_public2_ip_address
     Port2IP               = local.fgt_private2_ip_address
-    Port3IP               = local.fgt_sync2_ip_address
-    Port4IP               = local.fgt_mgmt2_ip_address
+    Port3IP               = local.fgt_mgmt2_ip_address
     PrivateSubnet         = local.private_subnet_cidr_az2
     security_cidr         = var.vpc_cidr_security
     spoke1_cidr           = var.vpc_cidr_east
@@ -142,8 +126,7 @@ data "template_file" "fgt_userdata_byol2" {
     PublicSubnetRouterIP  = cidrhost(local.public_subnet_cidr_az2, 1)
     public_subnet_mask    = cidrnetmask(local.public_subnet_cidr_az2)
     private_subnet_mask   = cidrnetmask(local.private_subnet_cidr_az2)
-    sync_subnet_mask      = cidrnetmask(local.sync_subnet_cidr_az2)
-    hamgmt_subnet_mask    = cidrnetmask(local.mgmt_subnet_cidr_az2)
+    mgmt_subnet_mask      = cidrnetmask(local.mgmt_subnet_cidr_az2)
     PrivateSubnetRouterIP = cidrhost(local.private_subnet_cidr_az2, 1)
     fgt_admin_password    = var.fgt_admin_password
   }
@@ -156,8 +139,7 @@ data "template_file" "fgt_userdata_paygo1" {
     fgt_id                = var.fortigate_hostname_1
     Port1IP               = local.fgt_public1_ip_address
     Port2IP               = local.fgt_private1_ip_address
-    Port3IP               = local.fgt_sync1_ip_address
-    Port4IP               = local.fgt_mgmt1_ip_address
+    Port3IP               = local.fgt_mgmt1_ip_address
     security_cidr         = var.vpc_cidr_security
     spoke1_cidr           = var.vpc_cidr_east
     spoke2_cidr           = var.vpc_cidr_west
@@ -169,8 +151,7 @@ data "template_file" "fgt_userdata_paygo1" {
     PublicSubnetRouterIP  = cidrhost(local.public_subnet_cidr_az1, 1)
     public_subnet_mask    = cidrnetmask(local.public_subnet_cidr_az1)
     private_subnet_mask   = cidrnetmask(local.private_subnet_cidr_az1)
-    sync_subnet_mask      = cidrnetmask(local.sync_subnet_cidr_az1)
-    hamgmt_subnet_mask    = cidrnetmask(local.mgmt_subnet_cidr_az1)
+    mgmt_subnet_mask      = cidrnetmask(local.mgmt_subnet_cidr_az1)
     PrivateSubnetRouterIP = cidrhost(local.private_subnet_cidr_az1, 1)
     fgt_admin_password    = var.fgt_admin_password
   }
@@ -183,8 +164,7 @@ data "template_file" "fgt_userdata_paygo2" {
     fgt_id                = var.fortigate_hostname_2
     Port1IP               = local.fgt_public2_ip_address
     Port2IP               = local.fgt_private2_ip_address
-    Port3IP               = local.fgt_sync2_ip_address
-    Port4IP               = local.fgt_mgmt2_ip_address
+    Port3IP               = local.fgt_mgmt2_ip_address
     PrivateSubnet         = local.private_subnet_cidr_az2
     security_cidr         = var.vpc_cidr_security
     spoke1_cidr           = var.vpc_cidr_east
@@ -197,8 +177,7 @@ data "template_file" "fgt_userdata_paygo2" {
     PublicSubnetRouterIP  = cidrhost(local.public_subnet_cidr_az2, 1)
     public_subnet_mask    = cidrnetmask(local.public_subnet_cidr_az2)
     private_subnet_mask   = cidrnetmask(local.private_subnet_cidr_az2)
-    sync_subnet_mask      = cidrnetmask(local.sync_subnet_cidr_az2)
-    hamgmt_subnet_mask    = cidrnetmask(local.mgmt_subnet_cidr_az2)
+    mgmt_subnet_mask      = cidrnetmask(local.mgmt_subnet_cidr_az2)
     PrivateSubnetRouterIP = cidrhost(local.private_subnet_cidr_az2, 1)
     fgt_admin_password    = var.fgt_admin_password
   }
@@ -290,9 +269,9 @@ module "allow_public_subnets" {
 #
 module "base-vpc" {
   source                          = "git::https://github.com/40netse/base_vpc_dual_az.git"
-  aws_region                      = var.aws_region
-  customer_prefix                 = var.cp
-  environment                     = var.env
+  region                          = var.aws_region
+  cp                              = var.cp
+  env                             = var.env
   availability_zone1              = var.availability_zone1
   availability_zone2              = var.availability_zone2
   create_tgw_connect_subnets      = var.create_transit_gateway ? true : false
@@ -300,23 +279,14 @@ module "base-vpc" {
   vpc_name_security               = var.vpc_name_security
   vpc_cidr_security               = var.vpc_cidr_security
   subnet_bits                     = var.subnet_bits
-  public_subnet_index             = var.public_subnet_index
-  private_subnet_index            = var.private_subnet_index
-  sync_subnet_index               = var.sync_subnet_index
-  mgmt_subnet_index               = var.mgmt_subnet_index
-  tgw_subnet_index                = var.tgw_subnet_index
   public1_description             = var.public1_description
   private1_description            = var.private1_description
   tgw1_description                = var.tgw1_description
-  sync1_description               = var.sync1_description
   mgmt1_description               = var.mgmt1_description
   public2_description             = var.public2_description
   private2_description            = var.private2_description
-  sync2_description               = var.sync2_description
   mgmt2_description               = var.mgmt2_description
   tgw2_description                = var.tgw2_description
-  vpc_tag_key                     = var.vpc_tag_key
-  vpc_tag_value                   = var.vpc_tag_value
 }
 
 module "vpc-transit-gateway" {
@@ -612,7 +582,6 @@ module "fortigate_1" {
   aws_ec2_instance_name       = "${var.cp}-${var.env}-${var.vpc_name_security}-${var.fortigate_instance_name_1}"
   availability_zone           = local.availability_zone_1
   enable_private_interface    = true
-  enable_sync_interface       = true
   enable_hamgmt_interface     = true
   enable_public_ips           = var.create_public_elastic_ip
   enable_mgmt_public_ips      = var.create_management_elastic_ips
@@ -620,8 +589,6 @@ module "fortigate_1" {
   public_ip_address           = local.fgt_public1_ip_address
   private_subnet_id           = module.base-vpc.private1_subnet_id
   private_ip_address          = local.fgt_private1_ip_address
-  sync_subnet_id              = element(module.base-vpc.sync1_subnet_id, 0)
-  sync_ip_address             = local.fgt_sync1_ip_address
   ha_subnet_id                = element(module.base-vpc.mgmt1_subnet_id, 0)
   ha_ip_address               = local.fgt_mgmt1_ip_address
   aws_ami                     = var.use_fortigate_byol ? data.aws_ami.fortigate_byol.id : data.aws_ami.fortigate_paygo.id
@@ -640,7 +607,6 @@ module "fortigate_2" {
   aws_ec2_instance_name       = "${var.cp}-${var.env}-${var.vpc_name_security}-${var.fortigate_instance_name_2}"
   availability_zone           = local.availability_zone_2
   enable_private_interface    = true
-  enable_sync_interface       = true
   enable_hamgmt_interface     = true
   enable_public_ips           = false
   enable_mgmt_public_ips      = var.create_management_elastic_ips
@@ -648,8 +614,6 @@ module "fortigate_2" {
   public_ip_address           = local.fgt_public2_ip_address
   private_subnet_id           = module.base-vpc.private2_subnet_id
   private_ip_address          = local.fgt_private2_ip_address
-  sync_subnet_id              = element(module.base-vpc.sync2_subnet_id, 0)
-  sync_ip_address             = local.fgt_sync2_ip_address
   ha_subnet_id                = element(module.base-vpc.mgmt2_subnet_id, 0)
   ha_ip_address               = local.fgt_mgmt2_ip_address
   aws_ami                     = var.use_fortigate_byol ? data.aws_ami.fortigate_byol.id : data.aws_ami.fortigate_paygo.id
@@ -783,10 +747,10 @@ module "west_instance" {
 module "fortimanager" {
   source                      = "git::https://github.com/40netse/fortimanager_existing_vpc.git"
   count                       = var.enable_fortimanager ? 1 : 0
-
+  name                        = "${var.cp}-${var.env}-${random_string.random.result}-${var.fortimanager_instance_name}"
   aws_region                  = var.aws_region
-  customer_prefix             = var.cp
-  environment                 = var.env
+  cp                          = var.cp
+  env                         = var.env
   availability_zone           = local.availability_zone_1
   vpc_id                      = module.base-vpc.vpc_id
   subnet_id                   = module.base-vpc.tgw1_subnet_id

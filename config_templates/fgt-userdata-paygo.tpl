@@ -15,7 +15,7 @@ edit "admin"
 set password ${fgt_admin_password}
 set force-password-change disable
 set gui-default-dashboard-template "minimal"
-set gui-ignore-release-overview-version "7.0.0"
+set gui-ignore-release-overview-version "7.2.0"
 next
 end
 config system interface
@@ -36,18 +36,10 @@ set mtu-override enable
 set mtu 9001
 next
 edit port3
-set alias hasync
-set mode static
-set ip ${Port3IP} ${sync_subnet_mask}
-set allowaccess ping
-set mtu-override enable
-set mtu 9001
-next
-edit port4
 set alias hamgmt
 set mode static
-set ip ${Port4IP} ${hamgmt_subnet_mask}
-set allowaccess ping https ssh
+set ip ${Port3IP} ${mgmt_subnet_mask}
+set allowaccess ping https ssh fgfm
 set mtu-override enable
 set mtu 9001
 next
@@ -67,10 +59,13 @@ set device port2
 set dst ${spoke1_cidr}
 set gateway ${PrivateSubnetRouterIP}
 next
-edit 4
-set device port2
-set dst ${spoke2_cidr}
-set gateway ${PrivateSubnetRouterIP}
+end
+config system vdom-exception
+edit 1
+set object system.interface
+next
+edit 2
+set object router.static
 next
 end
 config firewall address
@@ -95,6 +90,21 @@ set portforward enable
 set mappedip "192.168.0.11"
 set extport 2222
 set mappedport 22
+next
+config firewall vip
+edit "vip_to_fweb1"
+set extintf "port1"
+set portforward enable
+set mappedip "10.0.0.11"
+set extport 1443
+set mappedport 8443
+next
+edit "vip_to_fweb2"
+set extintf "port1"
+set portforward enable
+set mappedip "10.0.0.27"
+set extport 2443
+set mappedport 8443
 next
 edit "vip_to_east_http"
 set extintf "port1"
@@ -133,7 +143,7 @@ set mappedport 22
 next
 end
 config firewall policy
-edit 1
+edit 0
 set name East-West
 set srcintf port2
 set dstintf port2
@@ -144,7 +154,7 @@ set schedule always
 set service ALL
 set logtraffic all
 next
-edit 2
+edit 0
 set name South-North
 set srcintf port2
 set dstintf port1
@@ -157,7 +167,29 @@ set service ALL
 set logtraffic all
 set nat enable
 next
-edit 3
+edit 0
+set name "vip_to_fweb1"
+set srcintf "port1"
+set dstintf "port2"
+set srcaddr "all"
+set dstaddr "vip_to_fweb1"
+set action accept
+set schedule "always"
+set service "ALL"
+set logtraffic all
+next
+edit 0
+set name "vip_to_fweb2"
+set srcintf "port1"
+set dstintf "port2"
+set srcaddr "all"
+set dstaddr "vip_to_fweb2"
+set action accept
+set schedule "always"
+set service "ALL"
+set logtraffic all
+next
+edit 0
 set name "vip_to_east"
 set srcintf "port1"
 set dstintf "port2"
@@ -168,7 +200,7 @@ set schedule "always"
 set service "ALL"
 set logtraffic all
 next
-edit 4
+edit 0
 set name "vip_to_west"
 set srcintf "port1"
 set dstintf "port2"
@@ -179,7 +211,7 @@ set schedule "always"
 set service "ALL"
 set logtraffic all
 next
-edit 5
+edit 0
 set name "vip_to_east_80"
 set srcintf "port1"
 set dstintf "port2"
@@ -190,7 +222,7 @@ set schedule "always"
 set service "ALL"
 set logtraffic all
 next
-edit 6
+edit 0
 set name "vip_to_west_80"
 set srcintf "port1"
 set dstintf "port2"
@@ -201,7 +233,7 @@ set schedule "always"
 set service "ALL"
 set logtraffic all
 next
-edit 7
+edit 0
 set name "vip_to_fortimanager_443"
 set srcintf "port1"
 set dstintf "port2"
@@ -212,7 +244,7 @@ set schedule "always"
 set service "ALL"
 set logtraffic all
 next
-edit 8
+edit 0
 set name "vip_to_fortimanager_22"
 set srcintf "port1"
 set dstintf "port2"
@@ -226,15 +258,14 @@ next
 end
 config system ha
 set group-name fortinet
-set group-id 1
-set password ${fgt_ha_password}
+set group-name "group1"
 set mode a-p
-set hbdev port3 50
+set hbdev "port3" 50
 set session-pickup enable
 set ha-mgmt-status enable
 config ha-mgmt-interface
 edit 1
-set interface port4
+set interface port3
 set gateway ${mgmt_gw}
 next
 end

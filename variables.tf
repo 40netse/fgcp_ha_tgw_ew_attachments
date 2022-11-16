@@ -12,18 +12,19 @@ variable subnet_bits {
 }
 variable "public_subnet_index" {
   description = "Index of the public subnet"
+  default = 0
 }
 variable "private_subnet_index" {
   description = "Index of the private subnet"
-}
-variable "sync_subnet_index" {
-  description = "Index of the sync subnet"
+  default = 1
 }
 variable "mgmt_subnet_index" {
   description = "Index of the management subnet"
+  default = 2
 }
 variable "tgw_subnet_index" {
   description = "Index of the transit gateway attachment subnet"
+  default = 3
 }
 variable "keypair" {
   description = "Keypair for instances that support keypairs"
@@ -131,10 +132,6 @@ variable "tgw1_description" {
     description = "Description TGW 1 TO Subnet TAG"
     default = ""
 }
-variable "sync1_description" {
-    description = "Description Sync 1 TO Subnet TAG"
-    default = ""
-}
 variable "mgmt1_description" {
     description = "Description Mgmt 1 TO Subnet TAG"
     default = ""
@@ -149,21 +146,9 @@ variable "tgw2_description" {
     description = "Description TGW 2 TO Subnet TAG"
     default = ""
 }
-variable "sync2_description" {
-    description = "Description Sync 2 TO Subnet TAG"
-    default = ""
-}
 variable "mgmt2_description" {
     description = "Description Mgmt 2 TO Subnet TAG"
     default = ""
-}
-variable "vpc_tag_key" {
-    description = "Random Tag Key to place on VPC for data ID"
-    default     = ""
-}
-variable "vpc_tag_value" {
-    description = "Random Tag Value to place on VPC for data ID"
-    default     = ""
 }
 variable "cidr_for_access" {
   description = "CIDR to use for security group access"
