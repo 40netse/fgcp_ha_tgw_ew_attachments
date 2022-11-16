@@ -59,6 +59,11 @@ set device port2
 set dst ${spoke1_cidr}
 set gateway ${PrivateSubnetRouterIP}
 next
+edit 4
+set device port2
+set dst ${spoke2_cidr}
+set gateway ${PrivateSubnetRouterIP}
+next
 end
 config system vdom-exception
 edit 1
