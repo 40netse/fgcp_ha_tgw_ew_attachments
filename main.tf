@@ -296,7 +296,6 @@ module "vpc-transit-gateway" {
   default_route_table_association = "disable"
   default_route_table_propagation = "disable"
   dns_support                     = "disable"
-  default_route_attachment_id     = module.vpc-transit-gateway-attachment-security[0].tgw_attachment_id
 }
 
 #
