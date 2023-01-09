@@ -13,11 +13,10 @@ subnet_bits                 = 8
 # index in the subnet in the cidr range.
 # e.g. index 1 in 10.0.0.0/16 is 10.0.1.0/24
 #
-public_subnet_index         = 1
-private_subnet_index        = 2
-sync_subnet_index           = 3
-mgmt_subnet_index           = 4
-tgw_subnet_index            = 5
+#public_subnet_index         = 0
+#private_subnet_index        = 1
+#mgmt_subnet_index           = 2
+#tgw_subnet_index            = 3
 
 #
 # Variables likely to change
@@ -33,12 +32,12 @@ env                         = "env"
 vpc_name_security           = "security"
 vpc_name_east               = "east"
 vpc_name_west               = "west"
-vpc_cidr_security           = "10.0.0.0/16"
+vpc_cidr_security           = "10.0.0.0/24"
 vpc_cidr_east               = "192.168.0.0/24"
 vpc_cidr_west               = "192.168.1.0/24"
 
-fgt_admin_password          = "Texas4me!"
-fortios_version             = "7.2.1"
+fgt_admin_password          = ""
+fortios_version             = "7.2.3"
 fgt_byol_1_license          = "./licenses/fgt1-license.lic"
 fgt_byol_2_license          = "./licenses/fgt2-license.lic"
 fgt_host_ip                 = 10
@@ -103,17 +102,12 @@ use_fortigate_byol                    = true
 public1_description         = "public-1"
 private1_description        = "private-1"
 tgw1_description            = "tgw-1"
-sync1_description           = "sync-1"
 mgmt1_description           = "mgmt-1"
 
 public2_description         = "public-2"
 private2_description        = "private-2"
 tgw2_description            = "tgw-2"
-sync2_description           = "sync-2"
 mgmt2_description           = "mgmt-2"
-
-vpc_tag_key                 = "id-tag-key"
-vpc_tag_value               = "id-tag-value"
 
 #
 # Fortigate Variables

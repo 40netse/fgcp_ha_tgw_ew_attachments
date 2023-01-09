@@ -331,6 +331,7 @@ module "vpc-transit-gateway-attachment-security" {
   subnet_ids                                      = [ element(module.base-vpc.tgw1_subnet_id, 0),
                                                       element(module.base-vpc.tgw2_subnet_id,0) ]
   transit_gateway_default_route_table_propogation = "false"
+  appliance_mode_support                          = "enable"
   vpc_id                                          = module.base-vpc.vpc_id
 }
 
@@ -701,10 +702,25 @@ module "linux_iam_profile" {
   iam_role_name = "${var.cp}-${var.env}-${random_string.random.result}-linux-instance_role"
 }
 
+
+resource "null_resource" "previous" {}
+
+resource "time_sleep" "wait_5_minutes" {
+  depends_on = [module.fortigate_1]
+
+  create_duration = "5m"
+}
+
+# This resource will create (at least) 30 seconds after null_resource.previous
+resource "null_resource" "next" {
+  depends_on = [time_sleep.wait_5_minutes]
+}
+
 #
 # East Linux Instance for Generating East->West Traffic
 #
 module "east_instance" {
+  depends_on                  = [ time_sleep.wait_5_minutes]
   source                      = "git::https://github.com/40netse/terraform-modules.git//aws_ec2_instance"
   count                       = var.create_transit_gateway && var.enable_linux_instances ? 1 : 0
   aws_ec2_instance_name       = "${var.cp}-${var.env}-${var.vpc_name_east}-${var.linux_instance_name_east}"
@@ -725,6 +741,7 @@ module "east_instance" {
 # West Linux Instance for Generating West->East Traffic
 #
 module "west_instance" {
+  depends_on                  = [ time_sleep.wait_5_minutes]
   source                      = "git::https://github.com/40netse/terraform-modules.git//aws_ec2_instance"
   count                       = var.create_transit_gateway && var.enable_linux_instances ? 1 : 0
   aws_ec2_instance_name       = "${var.cp}-${var.env}-${var.vpc_name_west}-${var.linux_instance_name_west}"
