@@ -584,6 +584,8 @@ module "fortigate_1" {
   enable_private_interface    = true
   enable_hamgmt_interface     = true
   enable_public_ips           = var.create_public_elastic_ip
+  use_preallocated_elastic_ip = var.use_preallocated_elastic_ip
+  preallocated_elastic_ip     = var.preallocated_elastic_ip_id
   enable_mgmt_public_ips      = var.create_management_elastic_ips
   public_subnet_id            = module.base-vpc.public1_subnet_id
   public_ip_address           = local.fgt_public1_ip_address

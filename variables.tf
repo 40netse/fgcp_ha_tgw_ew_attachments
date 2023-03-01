@@ -76,6 +76,11 @@ variable "create_public_elastic_ip" {
   description = "Boolean Create the failover elastic ip in the public subnet."
   type = bool
 }
+variable "use_preallocated_elastic_ip" {
+  description = "Boolean Use a preallocated elastic IP for failover IP."
+  type = bool
+  default = false
+}
 variable "create_management_elastic_ips" {
   description = "Boolean Create the elastic ips in the management subnet."
   type = bool
@@ -110,6 +115,10 @@ variable "fortimanager_os_version" {
 }
 variable "fortimanager_host_ip" {
   description = "Fortimanager IP Address"
+}
+variable "preallocated_elastic_ip_id" {
+  description = "Preallocated Elastic IP Address ID"
+  default = ""
 }
 variable "fortimanager_byol_license" {
   description = "Fortimanager byol license"
